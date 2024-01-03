@@ -1,1 +1,0 @@
-from orbitalsynth import orbitalsynth
