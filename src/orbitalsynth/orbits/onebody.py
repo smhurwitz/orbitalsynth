@@ -38,6 +38,7 @@ class OneBody(Keplerian):
         self.p = a * (1 - ε**2)
         self.T = np.sqrt(4 * np.pi**2 * a**3 / (super().G * m))
 
+        if ε >= 1: raise ValueError("The parameters chosen result in ε≧1.")
         super().__init__()
 
     @classmethod
@@ -56,6 +57,7 @@ class OneBody(Keplerian):
     def from_m_r_v(cls, m, r, v):
         r_3D = np.concatenate([r, [0]])
         v_3D = np.concatenate([v, [0]])
+        print(np.cross(v_3D, np.cross(r_3D, v_3D)) / (super().G * m))
         ε = np.linalg.norm(np.cross(v_3D, np.cross(r_3D, v_3D)) / (super().G * m) 
                            - r_3D / np.linalg.norm(r_3D)) 
         a = (2 / np.linalg.norm(r) - np.linalg.norm(v)**2 / (super().G * m))**(-1)
@@ -80,7 +82,8 @@ class OneBody(Keplerian):
         for t in t:
             M = 2 * np.pi * (t - self.tp) / self.T
             divs, Mdiv = divmod(M, 2 * np.pi)
-            E = brentq(lambda E: E - self.ε * np.sin(E) - Mdiv, 0, 2 * np.pi, rtol=rtol) + 2 * np.pi * divs
+            kepler = lambda E: E - self.ε * np.sin(E) - Mdiv
+            E = brentq(kepler, 0, 2 * np.pi, rtol=rtol) + 2 * np.pi * divs
             ν = E + 2 * np.arctan2(self.β * np.sin(E), 1 - self.β * np.cos(E))
             direction = np.array([np.cos(ν + self.θi), np.sin(ν + self.θi)])
             r.append(self.a * (1 - self.ε * np.cos(E)) * direction)
@@ -137,11 +140,11 @@ class OneBody(Keplerian):
             return line, planet
     
         anim = FuncAnimation(fig=fig, func=animate, frames=N, interval=fps)
-        if save == False: plt.show()
+        if not save: plt.show()
         else: anim.save('1B_orbit.gif')
 
     #==========================================================================
-    #  PRESET ORBITS
+    #  PRE-DEFINED ORBITS
     #==========================================================================    
 
     @classmethod
