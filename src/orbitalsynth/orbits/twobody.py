@@ -15,8 +15,7 @@ class TwoBody(Keplerian):
 
     Parameters
     ==========
-    m0 : int
-    The mass of the first body.
+    m0 : The mass of the first body.
     m1 : The mass of the second body.
     R : The 2D Cartesian center-of-mass of both bodies.
     orbit_1B : The OneBody describing the reduction of the two-body problem.
@@ -59,6 +58,12 @@ class TwoBody(Keplerian):
         m = m0 + m1
         orbit = OneBody.from_m_r_v(m, r, v)
         return cls(m0, m1, R, orbit)
+    
+    @classmethod
+    def from_m0_T_ε_a1_R_r1(cls, m0, T, ε, a1, R, r1):
+        print(m0)
+        m1 = -m0 + np.sqrt(super().G * m0**3 * T**2) / (2 * np.pi * a1**(3/2))
+        return cls.from_m_ε_a1_R_r1(m0, m1, ε, a1, R, r1)
 
     #==========================================================================
     #  ORBITAL CALCULATIONS
