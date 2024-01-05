@@ -5,6 +5,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Circle
 from scipy.optimize import brentq
 from .kerplerian import Keplerian
+from ..config import *
 
 class OneBody(Keplerian):
     r"""
@@ -27,50 +28,69 @@ class OneBody(Keplerian):
     #  CONSTRUCTORS
     #==========================================================================
 
-    def __init__(self, m, ε, a, θi, tp):
+    def __init__(self, m, ε, a, θi, tp, clockwise):
         self.m = m
         self.ε = ε
         self.a = a
         self.θi = θi
         self.tp = tp
+        self.clockwise = clockwise
 
         self.β = ε / (1 + np.sqrt(1 - ε**2))
         self.p = a * (1 - ε**2)
-        self.T = np.sqrt(4 * np.pi**2 * a**3 / (super().G * m))
-
-        if ε >= 1: raise ValueError("The parameters chosen result in ε≧1.")
+        self.T = np.sqrt(4 * π**2 * a**3 / (G * m))
+        self.T *= -1
+        if ε >= 1 or a < 0 or m <= 0: 
+            raise ValueError("A parameter proivided is unphysical.")
         super().__init__()
 
+    def __call__(self):
+        print(f'm = {self.m:.3E}')
+        print(f'a = {self.a:.3E}')
+        print(f'T = {self.T:.3E}')
+        print(f'ε = {self.ε:.3E}')
+
     @classmethod
-    def from_m_ε_a_r(cls, m, ε, a, r):
-        if ε == 0: return cls(m, ε, a, 0, 0) 
-        T = np.sqrt(4 * np.pi**2 * a**3 / (super().G * m))
+    def from_m_ε_a_r(cls, m, ε, a, r, clockwise=True):
+        if ε == 0: return cls(m, ε, a, np.arctan2(r[1], r[0]), 0, clockwise) 
+        T = np.sqrt(4 * π**2 * a**3 / (G * m))
         E = np.arccos((1 - np.linalg.norm(r) / a) / ε)
         β = ε / (1 + np.sqrt(1 - ε**2))
         ν = E + 2 * np.arctan2(β * np.sin(E), 1 - β * np.cos(E))
-        M = E - ε * np.sin(E) % (2 * np.pi)
-        tp = -T * M / (2 * np.pi)
+        M = E - ε * np.sin(E) % (2 * π)
+        tp = -T * M / (2 * π)
         θi = -ν + np.arctan2(r[1], r[0])
-        return cls(m, ε, a, θi, tp) 
+        return cls(m, ε, a, θi, tp, clockwise) 
     
     @classmethod
     def from_m_r_v(cls, m, r, v):
         r_3D = np.concatenate([r, [0]])
         v_3D = np.concatenate([v, [0]])
-        print(np.cross(v_3D, np.cross(r_3D, v_3D)) / (super().G * m))
-        ε = np.linalg.norm(np.cross(v_3D, np.cross(r_3D, v_3D)) / (super().G * m) 
+        ε = np.linalg.norm(np.cross(v_3D, np.cross(r_3D, v_3D)) / (G * m) 
                            - r_3D / np.linalg.norm(r_3D)) 
-        a = (2 / np.linalg.norm(r) - np.linalg.norm(v)**2 / (super().G * m))**(-1)
-        return cls.from_m_ε_a_r(m, ε, a, r)
+        a = (2 / np.linalg.norm(r) - np.linalg.norm(v)**2 / (G * m))**(-1)
+        clockwise = True if np.cross(r_3D, v_3D)[2] >= 0 else False
+        return cls.from_m_ε_a_r(m, ε, a, r, clockwise)
     
     @classmethod
     def from_T_ε_a_r(cls, T, ε, a, r):
-        m = 4 * np.pi**2 * a**3 / (T**2 * super().G)
-        return cls.from_m_ε_a_r(m, ε, a, r)
+        m = 4 * π**2 * a**3 / (T**2 * G)
+        clockwise = True if T > 0 else False
+        return cls.from_m_ε_a_r(m, ε, a, r, clockwise)
 
     #==========================================================================
     #  ORBITAL CALCULATIONS
     #==========================================================================
+
+    def E_from_t(self, t, rtol=1e-3):
+        M = 2 * π * (t - self.tp) / self.T
+        divs, Mdiv = divmod(M, 2 * π)
+        kepler = lambda E: E - self.ε * np.sin(E) - Mdiv
+        E = brentq(kepler, 0, 2 * π, rtol=rtol) + 2 * π * divs
+        return E if self.clockwise else -E
+    
+    def ν_from_E(self, E):
+        return E + 2 * np.arctan2(self.β * np.sin(E), 1 - self.β * np.cos(E))
 
     def r_from_ν(self, ν): 
         direction = np.array([np.cos(ν + self.θi), np.sin(ν + self.θi)])
@@ -80,11 +100,8 @@ class OneBody(Keplerian):
         t = np.atleast_1d(t)
         r = []
         for t in t:
-            M = 2 * np.pi * (t - self.tp) / self.T
-            divs, Mdiv = divmod(M, 2 * np.pi)
-            kepler = lambda E: E - self.ε * np.sin(E) - Mdiv
-            E = brentq(kepler, 0, 2 * np.pi, rtol=rtol) + 2 * np.pi * divs
-            ν = E + 2 * np.arctan2(self.β * np.sin(E), 1 - self.β * np.cos(E))
+            E = self.E_from_t(t)
+            ν = self.ν_from_E(E)
             direction = np.array([np.cos(ν + self.θi), np.sin(ν + self.θi)])
             r.append(self.a * (1 - self.ε * np.cos(E)) * direction)
         return np.array(r).transpose()
@@ -94,7 +111,7 @@ class OneBody(Keplerian):
     #==========================================================================
     
     def plot_orbit(self, N=100):
-        ν = np.linspace(0, 2 * np.pi, N)
+        ν = np.linspace(0, 2 * π, N)
         r = self.r_from_ν(ν)
 
         scale = 1.1; scale_dif = 0.5 * (scale - 1)
@@ -141,7 +158,7 @@ class OneBody(Keplerian):
     
         anim = FuncAnimation(fig=fig, func=animate, frames=N, interval=fps)
         if not save: plt.show()
-        else: anim.save('1B_orbit.gif')
+        else: anim.save('outputs/1B_orbit.gif')
 
     #==========================================================================
     #  PRE-DEFINED ORBITS

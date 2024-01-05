@@ -3,8 +3,6 @@ class Keplerian():
     Abstract class to calculate the motion of various bodies under gravity.
     """
 
-    G = 6.67430 * 1e-11
-
     #==========================================================================
     #  ORBITAL CALCULATIONS
     #==========================================================================

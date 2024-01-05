@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
 from matplotlib.patches import CirclePolygon
 from matplotlib.animation import FuncAnimation
+from scipy.optimize import newton
 from .onebody import OneBody
 from .kerplerian import Keplerian
+from ..config import *
 
 class TwoBody(Keplerian):
     r"""
@@ -18,7 +20,7 @@ class TwoBody(Keplerian):
     m0 : The mass of the first body.
     m1 : The mass of the second body.
     R : The 2D Cartesian center-of-mass of both bodies.
-    orbit_1B : The OneBody describing the reduction of the two-body problem.
+    onebody : The OneBody describing the reduction of the two-body problem.
     ε : The eccentricity of the ellipses.
     a1 : The length of the semi-major axis of the second body's ellipse.
     r1 : The 2D Cartesian position vector for the second body at some time t. 
@@ -29,24 +31,30 @@ class TwoBody(Keplerian):
     #  CONSTRUCTORS
     #==========================================================================
 
-    def __init__(self, m0, m1, R, orbit_1B):
+    def __init__(self, m0, m1, R, onebody):
         self.m0 = m0
         self.m1 = m1
         self.R = np.array(R)
-        self.T = orbit_1B.T
-        self.orbit_1B = orbit_1B
+        self.T = onebody.T
+        self.ε = onebody.ε
+        self.θi = onebody.θi
+        self.a0 = m1 * onebody.a / (m0 + m1)
+        self.a1 = m0 * onebody.a / (m0 + m1)
+        self.ν_init = onebody.ν_from_E(onebody.E_from_t(0))
+        self.onebody = onebody
+        self.clockwise = self.onebody.clockwise
 
         super().__init__()
 
     @classmethod
-    def from_m_ε_a1_R_r1(cls, m0, m1, ε, a1, R, r1):
+    def from_m_ε_a1_R_r1(cls, m0, m1, ε, a1, R, r1, clkwise=True):
         R = np.array(R); r1 = np.array(r1)
         r0 = ((m0 + m1) * R - m1 * r1) / m0
         r = r1 - r0
         m = m0 + m1
         a = (m0 + m1) * a1 / m0
-        orbit = OneBody.from_m_ε_a_r(m, ε, a, r)
-        return cls(m0, m1, R, orbit)
+        onebody = OneBody.from_m_ε_a_r(m, ε, a, r, clkwise)
+        return cls(m0, m1, R, onebody)
 
     @classmethod
     def from_m_R_r1_v1(cls, m0, m1, R, r1, v1):
@@ -60,23 +68,28 @@ class TwoBody(Keplerian):
         return cls(m0, m1, R, orbit)
     
     @classmethod
-    def from_m0_T_ε_a1_R_r1(cls, m0, T, ε, a1, R, r1):
-        print(m0)
-        m1 = -m0 + np.sqrt(super().G * m0**3 * T**2) / (2 * np.pi * a1**(3/2))
-        return cls.from_m_ε_a1_R_r1(m0, m1, ε, a1, R, r1)
+    def from_m1_T_ε_a1_R_r1(cls, m1, T, ε, a1, R, r1):
+        f = lambda m0: 4 * π**2 * (m0 + m1)**2 * a1**3 - G * T**2 * m0**3
+        guess = 4 * π**2 * a1**3 / (G * T**2)
+        m0 = newton(f, guess, rtol=1e-3)
+        clkwise = True if T > 0 else False
+        if m0 <= 0: 
+            raise ValueError('The parameters chosen yield a non-physical value of m1. Try increasing m0, increasing T, or decreasing a1.')
+
+        return cls.from_m_ε_a1_R_r1(m0, m1, ε, a1, R, r1, clkwise)
 
     #==========================================================================
     #  ORBITAL CALCULATIONS
     #==========================================================================
 
     def r_from_ν(self, ν): 
-        r = self.orbit_1B.r_from_ν(ν)
+        r = self.onebody.r_from_ν(ν)
         r0 = self.R[:, None] - self.m1 / (self.m0 + self.m1) * r
         r1 = self.R[:, None] + self.m0 / (self.m0 + self.m1) * r
         return r0, r1
 
     def r_from_t(self, t, rtol=1e-3):
-        r = self.orbit_1B.r_from_t(t, rtol)
+        r = self.onebody.r_from_t(t, rtol)
         r0 = self.R[:, None] - self.m1 / (self.m0 + self.m1) * r
         r1 = self.R[:, None] + self.m0 / (self.m0 + self.m1) * r
         return r0, r1
@@ -86,7 +99,7 @@ class TwoBody(Keplerian):
     #==========================================================================
 
     def plot_orbit(self, N = 100):
-        ν = np.linspace(0, 2 * np.pi, N)
+        ν = np.linspace(0, 2 * π, N)
         r0, r1 = self.r_from_ν(ν)
         all_x = np.concatenate((r0[0], r1[0]))
         all_y = np.concatenate((r0[1], r1[1]))
@@ -144,7 +157,7 @@ class TwoBody(Keplerian):
     
         anim = FuncAnimation(fig=fig, func=animate, frames=N, interval=fps)
         if not save: plt.show()
-        else: anim.save('2B_orbit.gif')
+        else: anim.save('outputs/2B_orbit.gif')
 
     #==========================================================================
     #  PRE-DEFINED ORBITS
