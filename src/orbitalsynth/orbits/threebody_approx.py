@@ -2,9 +2,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
-from matplotlib.patches import CirclePolygon
 from matplotlib.animation import FuncAnimation
-from .onebody import OneBody
 from .twobody import TwoBody
 from .kerplerian import Keplerian
 from ..config import *
@@ -30,7 +28,7 @@ class ThreeBodyApprox(Keplerian):
     twobodyi : The ith system
     """
 
-    #==========================================================================
+    #=============================x=============================================
     #  CONSTRUCTORS
     #==========================================================================
 
@@ -43,7 +41,6 @@ class ThreeBodyApprox(Keplerian):
         self.θi0 = twobody0.θi; self.θi1 = twobody1.θi
         self.ν0_init = twobody0.ν_init; self.ν1_init = twobody1.ν_init
         self.twobody0 = twobody0; self.twobody1 = twobody1
-        self.clkwise0 = twobody0.clockwise; self.clkwise1 = twobody1.clockwise
         if not math.isclose(twobody0.m1, self.m1 + self.m2, rel_tol=1e-5):
             raise ValueError('''The parameters must be set such that the masses 
                              of the planet-moon system are identical across 
@@ -57,6 +54,9 @@ class ThreeBodyApprox(Keplerian):
         print(f'[T0, T1] = [{self.T0:.3E}, {self.T1:.3E}]')
         print(f'[ε0, ε1] = [{self.ε0:.3E}, {self.ε1:.3E}]')
 
+    def closed(self):
+        return math.isclose(self.T0 / self.T1, round(self.T0 / self.T1))
+    
     @classmethod
     def from_twobody1_T0_ε0_A_R(cls, twobody1, T0, ε0, A, R):
         M = twobody1.m0 + twobody1.m1

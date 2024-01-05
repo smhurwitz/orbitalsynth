@@ -1,18 +1,25 @@
 from abc import ABC, abstractmethod, abstractproperty
-from .orbit import Orbit
-class Keplerian(Orbit):
+
+class Orbit(ABC): 
     r"""
-    Abstract class to calculate the Keplerian motion of various bodies under gravity.
+    Abstract class to calculate the motion of various bodies under gravity.
     """
+
+    #==========================================================================
+    #  PARAMETERS
+    #==========================================================================
+
+    @abstractproperty
+    def closed(self): pass
 
     #==========================================================================
     #  ORBITAL CALCULATIONS
     #==========================================================================
 
     @abstractmethod
-    def r_from_ν(self, ν): 
+    def r_from_t(self, t): 
         r"""
-        Returns the 2D orbital position vector for some true anomaly ν.
+        Returns the 2D orbital position vector for some time t.
         """
         pass
     
@@ -21,8 +28,8 @@ class Keplerian(Orbit):
     #==========================================================================
 
     @abstractmethod
-    def plot_orbit(self, N):
+    def track_orbit(self, t, vid_len, save):
         r"""
-        Plots one full period of orbit.
+        Creates a movie tracking the motion of the orbiting bodies.
         """
         pass

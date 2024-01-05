@@ -46,6 +46,8 @@ class TwoBody(Keplerian):
 
         super().__init__()
 
+    def closed(self): True
+    
     @classmethod
     def from_m_ε_a1_R_r1(cls, m0, m1, ε, a1, R, r1, clkwise=True):
         R = np.array(R); r1 = np.array(r1)

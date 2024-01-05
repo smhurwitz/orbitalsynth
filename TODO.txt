@@ -1,3 +1,1 @@
-I need to get the 3B up and running... I like the idea of creating some methods
-that take something like the inner orbit, m1, R, epsilon, etc, and chain it
-together. That feel svery easy and doable.
+1) strong condition that a1M > a23 everywhere... maybe??

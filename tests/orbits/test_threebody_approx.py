@@ -45,5 +45,5 @@ from orbitalsynth.config import *
 # threebody.track_orbit(save=True)
 
 # CASE 4: square
-# threebody = ThreeBodyApprox.square(masses['moon'], radii['earth'])
-# threebody.track_orbit()
+threebody = ThreeBodyApprox.square(masses['moon'], radii['earth'])
+threebody.track_orbit()

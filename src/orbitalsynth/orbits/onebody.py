@@ -39,7 +39,7 @@ class OneBody(Keplerian):
         self.β = ε / (1 + np.sqrt(1 - ε**2))
         self.p = a * (1 - ε**2)
         self.T = np.sqrt(4 * π**2 * a**3 / (G * m))
-        self.T *= -1
+
         if ε >= 1 or a < 0 or m <= 0: 
             raise ValueError("A parameter proivided is unphysical.")
         super().__init__()
@@ -49,6 +49,8 @@ class OneBody(Keplerian):
         print(f'a = {self.a:.3E}')
         print(f'T = {self.T:.3E}')
         print(f'ε = {self.ε:.3E}')
+    
+    def closed(self): return True
 
     @classmethod
     def from_m_ε_a_r(cls, m, ε, a, r, clockwise=True):
