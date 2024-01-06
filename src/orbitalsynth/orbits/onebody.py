@@ -160,7 +160,7 @@ class OneBody(Keplerian):
     
         anim = FuncAnimation(fig=fig, func=animate, frames=N, interval=fps)
         if not save: plt.show()
-        else: anim.save('outputs/1B_orbit.gif')
+        else: anim.save('outputs/orbits/1B_orbit.gif')
 
     #==========================================================================
     #  PRE-DEFINED ORBITS

@@ -19,12 +19,12 @@ from orbitalsynth.config import *
 # square = ThreeBodyApprox.square()
 # Waveform(square, 2).save(440, filename='square')
 
-# m0 = masses['sun']; m1 = masses['earth']*10000; m2 = m1
-# a0 = radii['earth']; a2 = radii['earth'] / 20
-# twobody = TwoBody.from_m_ε_a1_R_r1(m1, m2, 0, a2, [0,0], [a2,0])
-# spiral = ThreeBodyApprox.from_twobody1_m0_ε0_A_R(twobody, m0, 0, a0, [a0,0])
+m0 = masses['sun']; m1 = masses['earth']*10000; m2 = m1
+a0 = radii['earth']; a2 = radii['earth'] / 20
+twobody = TwoBody.from_m_ε_a1_R_r1(m1, m2, 0, a2, [0,0], [a2,0])
+spiral = ThreeBodyApprox.from_twobody1_m0_ε0_A_R(twobody, m0, 0, a0, [a0,0])
+Waveform(spiral, 1).save(440, filename='spiral')
 # spiral.track_orbit()
-# Waveform(spiral, 1).save(440, filename='spiral')
 
 # m0 = masses['sun']; m1 = masses['earth']*10000; m2 = m1/3
 # a0 = radii['earth']; a2 = radii['earth'] / 10
@@ -37,13 +37,13 @@ from orbitalsynth.config import *
 # a0 = radii['earth']; a2 = radii['earth'] / 10
 # twobody = TwoBody.from_m_ε_a1_R_r1(m1, m2, 0.7, a2, [0,0], [a2,0])
 # spiral = ThreeBodyApprox.from_twobody1_m0_ε0_A_R(twobody, m0, 0.5, a0, [a0/1.4,a0/1.4])
-# spiral.track_orbit()
 # Waveform(spiral, 1).save(440, filename='funny2')
+# spiral.track_orbit()
 
-m0 = masses['sun']; m1 = masses['earth']*30000; m2 = m1
-a0 = radii['earth']; a2 = radii['earth'] / 10
-twobody = TwoBody.from_m_ε_a1_R_r1(m1, m2, 0.7, a2, [0,0], [a2,0])
-spiral = ThreeBodyApprox.from_twobody1_m0_ε0_A_R(twobody, m0, 0.5, a0, [a0/1.4,a0/1.4])
-spiral.track_orbit(save = True)
-Waveform(spiral, 1).save(440, filename='funny3')
+# m0 = masses['sun']; m1 = masses['earth']*30000; m2 = m1
+# a0 = radii['earth']; a2 = radii['earth'] / 10
+# twobody = TwoBody.from_m_ε_a1_R_r1(m1, m2, 0.7, a2, [0,0], [a2,0])
+# spiral = ThreeBodyApprox.from_twobody1_m0_ε0_A_R(twobody, m0, 0.5, a0, [a0/1.4,a0/1.4])
+# spiral.track_orbit(save = True)
+# Waveform(spiral, 1).save(440, filename='funny3')
 

@@ -1,1 +1,6 @@
 1) strong condition that a1M > a23 everywhere... maybe??
+2) FFT
+3) quasiperiodic condition from 3.1 of https://hal.science/hal-01087013/document
+4) plot waveform vs time or quasiperiods
+5) update github
+6) update docs
